@@ -4,7 +4,7 @@ Minimal **FastAPI** app with `POST /generate` using **Hugging Face Inference Pro
 
 Also see **`solution/`** (reference) and **`tp/`** (guided lab).
 
-## Project layout
+## Project  layout
 
 | Path | Role |
 |------|------|
