@@ -34,10 +34,6 @@ jobs:
       ACR_NAME: ${{ secrets.ACR_NAME }}
       ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
       IMAGE_REPO: ${{ secrets.ACR_REPOSITORY }}
-      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-      CONTAINERAPP_NAME: ${{ vars.CONTAINERAPP_NAME }}
-      CONTAINERAPPS_ENV: ${{ vars.CONTAINERAPPS_ENV }}
-      HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,24 +61,6 @@ jobs:
             echo "ACR_LOGIN_SERVER not set, using ${ACR_NAME}.azurecr.io"
             echo "ACR_LOGIN_SERVER=${ACR_NAME}.azurecr.io" >> "$GITHUB_ENV"
           fi
-          if [ -z "${RESOURCE_GROUP}" ]; then
-            echo "Missing required secret: RESOURCE_GROUP"
-            exit 1
-          fi
-          if [ -z "${HUGGINGFACE_API_KEY}" ]; then
-            echo "Missing required secret: HUGGINGFACE_API_KEY"
-            exit 1
-          fi
-          if [ -z "${CONTAINERAPP_NAME}" ]; then
-            echo "Missing required repository variable: CONTAINERAPP_NAME"
-            echo "Set it in GitHub: Settings > Secrets and variables > Actions > Variables"
-            exit 1
-          fi
-          if [ -z "${CONTAINERAPPS_ENV}" ]; then
-            echo "CONTAINERAPPS_ENV not set, using default: hf-env"
-            echo "CONTAINERAPPS_ENV=hf-env" >> "$GITHUB_ENV"
-          fi
-
       - name: Login to ACR
         run: az acr login --name "$ACR_NAME"
 
@@ -94,29 +72,3 @@ jobs:
             -t "${ACR_LOGIN_SERVER}/${IMAGE_REPO}:latest" \
             -t "${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${GITHUB_SHA}" \
             --push .
-
-      - name: Deploy Container App (create if missing)
-        run: |
-          IMAGE_TAGGED="${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${GITHUB_SHA}"
-          if az containerapp show --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
-            echo "Updating existing app: $CONTAINERAPP_NAME"
-            az containerapp update \
-              --name "$CONTAINERAPP_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --image "$IMAGE_TAGGED" \
-              --set-env-vars "HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY"
-          else
-            echo "Creating app: $CONTAINERAPP_NAME in env: $CONTAINERAPPS_ENV"
-            ACR_PASSWORD="$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)"
-            az containerapp create \
-              --name "$CONTAINERAPP_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --environment "$CONTAINERAPPS_ENV" \
-              --image "$IMAGE_TAGGED" \
-              --target-port 8000 \
-              --ingress external \
-              --registry-server "$ACR_LOGIN_SERVER" \
-              --registry-username "$ACR_NAME" \
-              --registry-password "$ACR_PASSWORD" \
-              --env-vars "HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY"
-          fi
