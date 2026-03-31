@@ -27,6 +27,24 @@ Dans `GitHub > Settings > Secrets and variables > Actions`, ajouter :
 - `ACR_NAME` (ex: `monacrhf12345`)
 - `ACR_LOGIN_SERVER` (ex: `monacrhf12345.azurecr.io`)
 - `ACR_REPOSITORY` (ex: `hf-fastapi`)
+- `RESOURCE_GROUP` (ex: `rg-hf-fastapi`)
+- `HUGGINGFACE_API_KEY`
+
+Et dans l'onglet **Variables** (pas Secrets) :
+
+- `CONTAINERAPP_NAME` (ex: `hf-fastapi-app-cicd`)
+
+Le workflow deploie directement vers la valeur de `CONTAINERAPP_NAME`.
+
+Ou la definir exactement :
+
+1. Ouvrir le repo GitHub
+2. Aller dans `Settings`
+3. `Secrets and variables` -> `Actions`
+4. Onglet `Variables`
+5. `New repository variable`
+6. Name: `CONTAINERAPP_NAME`
+7. Value: le nom exact de la Container App Azure (ex: `hf-fastapi-app-etu1`)
 
 ---
 

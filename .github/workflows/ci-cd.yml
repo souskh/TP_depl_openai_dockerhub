@@ -34,6 +34,9 @@ jobs:
       ACR_NAME: ${{ secrets.ACR_NAME }}
       ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
       IMAGE_REPO: ${{ secrets.ACR_REPOSITORY }}
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      CONTAINERAPP_NAME: ${{ vars.CONTAINERAPP_NAME }}
+      HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +46,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Validate CI/CD secrets
+      - name: Validate CI/CD config
         run: |
           if [ -z "$ACR_NAME" ]; then
             echo "Missing required secret: ACR_NAME"
@@ -57,6 +60,19 @@ jobs:
             echo "ACR_LOGIN_SERVER not set, using ${ACR_NAME}.azurecr.io"
             echo "ACR_LOGIN_SERVER=${ACR_NAME}.azurecr.io" >> "$GITHUB_ENV"
           fi
+          if [ -z "${RESOURCE_GROUP}" ]; then
+            echo "Missing required secret: RESOURCE_GROUP"
+            exit 1
+          fi
+          if [ -z "${HUGGINGFACE_API_KEY}" ]; then
+            echo "Missing required secret: HUGGINGFACE_API_KEY"
+            exit 1
+          fi
+          if [ -z "${CONTAINERAPP_NAME}" ]; then
+            echo "Missing required repository variable: CONTAINERAPP_NAME"
+            echo "Set it in GitHub: Settings > Secrets and variables > Actions > Variables"
+            exit 1
+          fi
 
       - name: Login to ACR
         run: az acr login --name "$ACR_NAME"
@@ -69,3 +85,12 @@ jobs:
             -t "$ACR_LOGIN_SERVER/$IMAGE_REPO:latest" \
             -t "$ACR_LOGIN_SERVER/$IMAGE_REPO:${GITHUB_SHA}" \
             --push .
+
+      - name: Deploy student Container App
+        run: |
+          echo "Updating $CONTAINERAPP_NAME"
+          az containerapp update \
+            --name "$CONTAINERAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_LOGIN_SERVER/$IMAGE_REPO:${GITHUB_SHA}" \
+            --set-env-vars "HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY"
