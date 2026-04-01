@@ -41,7 +41,7 @@ az_retry() {
 # ---- Defaults (override by exporting env vars) ----
 LOCATION="${LOCATION:-westeurope}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-hf-fastapi}"
-ACR_NAME="${ACR_NAME:-monacrhf12345}"
+ACR_NAME="${ACR_NAME:-sskhiri}"
 ACR_SERVER="${ACR_SERVER:-${ACR_NAME}.azurecr.io}"
 ACR_REPO="${ACR_REPO:-hf-fastapi}"
 TAG="${TAG:-${STUDENT_ID}}"
