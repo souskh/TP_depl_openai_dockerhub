@@ -1,7 +1,7 @@
 # Solution — Hugging Face Inference + FastAPI (référence)
 
 Implémentation complète. Les étudiants travaillent dans **`../tp/`** ; compare avec ce dossier une fois le TP terminé.
-
+###
 ## Comment tester la solution (FR)
 
 1. **Token Hugging Face** — Crée un token sur [Settings → Access Tokens](https://huggingface.co/settings/tokens). Mets **`HUGGINGFACE_API_KEY`** dans **`.env` dans le dossier `solution/`** si tu lances `uvicorn` depuis `solution/`.
